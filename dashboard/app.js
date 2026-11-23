@@ -321,11 +321,11 @@
       el('p', { class: 'sub', text: 'Recomputed on this page as ' + fmtUsd(impliedOf(row)) + (impliedOf(row) === row.implied_value_usd ? ', the same number board.json carries.' : ', which differs from the board: the data would be stale.') + ' ' + peerNote + ' An estimate, not a price.' })));
     dialog.appendChild(el('section', { class: 'detail-section' },
       el('h3', { text: 'Verdict for a farmer' }),
-      el('div', { class: 'verdict', text: (row.change_7d !== null && row.change_7d <= -10)
+      el('div', { class: 'verdict', text: 'Outlook: ' + (row.outlook || 'steady') + '. ' + ((row.change_7d !== null && row.change_7d <= -10)
         ? 'Caution first: TVL is falling fast this week. The plan below still works, but its monitoring step is a hard stop, not a reminder.'
         : (row.segment === 'early'
           ? 'Early find: below the house floor, so size the position at the plan amounts and no more until it has held for a month.'
-          : 'Core board row: covered by the watchlist floor, with the full plan below sized to its TVL.') })));
+          : 'Core board row: covered by the watchlist floor, with the full plan below sized to its TVL.') )})));
     dialog.appendChild(el('section', { class: 'detail-section' },
       el('h3', { text: 'Farm plan: seven steps' }),
       el('ol', { class: 'steps' }, steps.map(function (s) {

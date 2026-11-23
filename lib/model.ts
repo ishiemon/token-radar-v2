@@ -111,6 +111,16 @@ export interface FarmStep {
   time: string;
 }
 
+/** A row's short-term outlook, from its seven-day change alone. */
+export type Outlook = 'rising' | 'steady' | 'cooling';
+
+export function outlookFor(change7d: number | null): Outlook {
+  if (change7d === null) return 'steady';
+  if (change7d >= 3) return 'rising';
+  if (change7d <= -3) return 'cooling';
+  return 'steady';
+}
+
 export interface BoardRow {
   rank: number;
   slug: string;
@@ -125,6 +135,7 @@ export interface BoardRow {
   symbol: string | null;
   token_status: 'pre-token';
   segment: 'watchlist' | 'early';
+  outlook: Outlook;
   age_days: number | null;
   implied_value_usd: number;
   model: {
@@ -149,6 +160,7 @@ export interface RadarRow {
   mcap_usd: number | null;
   listed_at: string | null;
   segment: 'watchlist' | 'early';
+  outlook: Outlook;
   age_days: number | null;
   implied_value_usd: number;
   category_multiple: number;
@@ -289,6 +301,7 @@ export function buildBoard(snapshot: Snapshot, model: ModelConstants = MODEL): B
     symbol: p.symbol,
     token_status: 'pre-token',
     segment: segment.get(p.slug) ?? 'early',
+    outlook: outlookFor(p.change_7d),
     age_days: s.age,
     implied_value_usd: s.implied,
     model: {
@@ -379,7 +392,10 @@ export function farmSteps(p: SnapshotProtocol, age: number | null): FarmStep[] {
   const gas = gasFor(chain);
   const capital = capitalFor(p);
   const hold = holdDaysFor(age);
-  const dropping = (p.change_7d ?? 0) <= -10;
+  // The warning step keys off the row's outlook: a cooling row (down 3 percent
+  // or more) gets the softer watch wording, and only a fall of 10 percent or
+  // more earns the hard stop in step six below.
+  const dropping = outlookFor(p.change_7d) === 'cooling' && (p.change_7d ?? 0) <= -10;
   return [
     {
       text: `Use a fresh wallet that holds only the funds you plan to farm ${p.name} with, and keep its seed phrase offline.`,
@@ -449,6 +465,7 @@ export function radarRow(row: BoardRow): RadarRow {
     mcap_usd: row.mcap_usd,
     listed_at: row.listed_at,
     segment: row.segment,
+    outlook: row.outlook,
     age_days: row.age_days,
     implied_value_usd: row.implied_value_usd,
     category_multiple: row.model.category_multiple,
